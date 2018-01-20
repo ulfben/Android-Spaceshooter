@@ -150,3 +150,5 @@ crashlytics-build.properties
 *.jar
 *.war
 *.ear
+app/src/androidTest/java/com/ulfben/spaceshooter/ExampleInstrumentedTest.java
+app/src/test/java/com/ulfben/spaceshooter/ExampleUnitTest.java
