@@ -1,7 +1,9 @@
 package com.ulfben.spaceshooter;
 
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 public class GameActivity extends AppCompatActivity {
