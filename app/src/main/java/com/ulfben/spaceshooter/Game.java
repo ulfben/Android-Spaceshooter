@@ -52,11 +52,11 @@ public class Game extends SurfaceView implements Runnable{
     private long mFrameCount = 0;
     private float mAvgFramerate = 0f;
 
-
-      //sound effects
+    private JukeBox mJukeBox;
 
     public Game(final Context context){
         super(context);
+        mJukeBox = new JukeBox(context);
         mHolder = getHolder();
         mHolder.setFixedSize(STAGE_WIDTH, STAGE_HEIGHT);
         mPaint = new Paint();
@@ -80,6 +80,7 @@ public class Game extends SurfaceView implements Runnable{
         mGameOver = false;
         mDistanceTraveled = 0;
         mLongestDistanceTraveled = mPrefs.getLong(LONGEST_DIST, 0);
+        mJukeBox.play(JukeBox.CRASH);
     }
 
     public void onResume() {
@@ -97,7 +98,9 @@ public class Game extends SurfaceView implements Runnable{
             Log.d(TAG, Log.getStackTraceString(e.getCause()));
         }
     }
-    public void onDestroy() {}
+    public void onDestroy() {
+        mJukeBox.destroy();
+    }
 
     //Q&D: stand in for an InputManager interface
     //We cheat and simply pass a reference to the Game-object
