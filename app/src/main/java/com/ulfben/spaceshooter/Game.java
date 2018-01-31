@@ -1,5 +1,6 @@
 package com.ulfben.spaceshooter;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -12,6 +13,9 @@ import java.util.ArrayList;
 
 public class Game extends SurfaceView implements Runnable{
     public static final String TAG = "Game";
+    public static final String PREFS = "com.ulfben.spaceshooter";
+    public static final String LONGEST_DIST = "longest_distance";
+
     //GAME SETTINGS
     public static final int STAGE_WIDTH = 1280;
     public static final int STAGE_HEIGHT = 720;
@@ -30,6 +34,7 @@ public class Game extends SurfaceView implements Runnable{
 
     private boolean mIsRunning = false;
     private Thread mGameThread = null;
+    private SharedPreferences mPrefs;
     private SurfaceHolder mHolder;
     private Paint mPaint;
     private Canvas mCanvas;
@@ -37,17 +42,18 @@ public class Game extends SurfaceView implements Runnable{
     private Player mPlayer;
     private boolean mIsBoosting = false;
 
-    //FPS-readout / rate limiting
-    private long mLastSampleTime = 0;
-    private long mFrameCount = 0;
-    private float mAvgFramerate = 0f;
     private boolean mGameOver = false;
     private long mDistanceTraveled = 0;
     private long mLongestDistanceTraveled = 0;
 
-    //highscore (includes sharedprefs)
-        //update the start screen
-    //sound effects
+    //TODO: make Frame class
+    //FPS-readout / rate limiting
+    private long mLastSampleTime = 0;
+    private long mFrameCount = 0;
+    private float mAvgFramerate = 0f;
+
+
+      //sound effects
 
     public Game(final Context context){
         super(context);
@@ -62,6 +68,7 @@ public class Game extends SurfaceView implements Runnable{
             mEntities.add(new Enemy(context));
         }
         mPlayer = new Player(context);
+        mPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         startGame();
     }
 
@@ -72,6 +79,7 @@ public class Game extends SurfaceView implements Runnable{
         }
         mGameOver = false;
         mDistanceTraveled = 0;
+        mLongestDistanceTraveled = mPrefs.getLong(LONGEST_DIST, 0);
     }
 
     public void onResume() {
@@ -112,6 +120,8 @@ public class Game extends SurfaceView implements Runnable{
             e.update();
             e.worldWrap(STAGE_WIDTH, STAGE_HEIGHT);
         }
+        //TODO: pick better win-condition, or balance this
+            //time alive? enemies overtaken?
         mDistanceTraveled += mPlayer.getVelocityX();
     }
 
@@ -144,6 +154,7 @@ public class Game extends SurfaceView implements Runnable{
         mHolder.unlockCanvasAndPost(mCanvas);
     }
 
+    //TODO: make UI class
     private void drawGameOverHUD(){
         float scaleFactor = (float) Math.sqrt(mCanvas.getWidth() * mCanvas.getHeight()) / 250; //250 is arbitrary!
         int sizeInPixels = 30;
@@ -152,11 +163,13 @@ public class Game extends SurfaceView implements Runnable{
         mPaint.setColor(Color.WHITE);
         mPaint.setTextAlign(Paint.Align.CENTER);
         String result = "You traveled " + mDistanceTraveled + " km!";
-        //TODO: check if record was set, update GUI to show
-            //notes needed: "GAME OVER!", "Tap screen to restart!"
+        if(mDistanceTraveled > mLongestDistanceTraveled) {
+            result = "New record: " + mDistanceTraveled + "!";
+        }
+        //TODO: more notes needed: "GAME OVER!", "Tap screen to restart!"
         mCanvas.drawText(result, STAGE_WIDTH/2, (STAGE_HEIGHT/2)-scaledSize, mPaint);
     }
-
+    //TODO: make UI class
     private void drawHUD(){
         float scaleFactor = (float) Math.sqrt(mCanvas.getWidth() * mCanvas.getHeight()) / 250; //250 is arbitrary!
         int sizeInPixels = 10;
@@ -168,7 +181,7 @@ public class Game extends SurfaceView implements Runnable{
         mCanvas.drawText("FPS: " + mAvgFramerate, 10, STAGE_HEIGHT-scaledSize, mPaint);
     }
 
-
+    //TODO: maybe use SurfaceHolder callbacks to avoid this
     private boolean lockAndAcquireCanvas() {
         if(!mHolder.getSurface().isValid()){
             return false;
@@ -180,14 +193,14 @@ public class Game extends SurfaceView implements Runnable{
     @Override
     public void run() {
         while(mIsRunning){
-            long start = System.nanoTime();
-            onEnterFrame();
+            long start = System.nanoTime(); //TODO: make Frame class
+            onEnterFrame(); //TODO: make Frame class
             input();
             update();
             checkCollisions();
             checkForGameOver();
             render();
-            rateLimit(start);
+            rateLimit(start); //TODO: make Frame class
         }
     }
 
@@ -197,10 +210,13 @@ public class Game extends SurfaceView implements Runnable{
         }
         mGameOver = (mPlayer.getHealth() < 0);
         if(mDistanceTraveled > mLongestDistanceTraveled){
-            //TODO: save high score!
+            SharedPreferences.Editor edit = mPrefs.edit();
+            edit.putLong(LONGEST_DIST, mDistanceTraveled);
+            edit.apply();
         }
     }
 
+    //TODO: make Frame class
     private void rateLimit(long startOfFrame){
         float millisRemaining = ((startOfFrame + NANOS_PER_FRAME) - System.nanoTime()) * NANOS_TO_MILLIS;
         if(millisRemaining > 1) {
@@ -212,7 +228,7 @@ public class Game extends SurfaceView implements Runnable{
         }
     }
 
-    //TODO: make class
+    //TODO: make Frame class
     private void onEnterFrame(){
         mFrameCount++;
         long timeSinceLast = System.nanoTime()-mLastSampleTime;
@@ -222,7 +238,6 @@ public class Game extends SurfaceView implements Runnable{
         mAvgFramerate = mFrameCount / (timeSinceLast* NANOS_TO_SECONDS);
         mLastSampleTime = System.nanoTime();
         mFrameCount = 0;
-        Log.d(TAG, "FPS: " + mAvgFramerate);
     }
 
     @Override
