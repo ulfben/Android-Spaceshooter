@@ -14,6 +14,15 @@ public class Utils {
         return val;
     }
 
+    public static float clamp(float val, final float min, final float max){
+        if(val < min){
+            val = min;
+        }else if(val > max){
+            val = max;
+        }
+        return val;
+    }
+
     public static Bitmap flipBitmap(Bitmap source, boolean horizontally){
         Matrix matrix = new Matrix();
         int cx = source.getWidth()/2;

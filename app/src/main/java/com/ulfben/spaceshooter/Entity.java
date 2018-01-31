@@ -34,17 +34,36 @@ public class Entity {
         mY = y;
     }
 
+
     public void worldWrap(final float width, final float height){
         mX = Utils.wrap(mX, -mWidth, width+mWidth);
     }
 
-    public void input(){}
+    public void respawn(){};
+
+    public void input(Game game){}
+
     public void update(){
         mX += mVelocityX;
         mY += mVelocityY;
     }
     public void render(final Canvas canvas, final Paint paint){
 
+    }
+
+    public boolean isColliding(Entity that){
+        return Entity.intersectsAABB(this, that);
+    }
+
+    public void onCollision(Entity that){
+        // no default implementation
+    }
+
+    public static boolean intersectsAABB(Entity a, Entity b) {
+        return !(a.right() < b.left()
+                || b.right() < a.left()
+                || a.bottom() < b.top()
+                || b.bottom() < a.top());
     }
 
     public float left(){
@@ -77,11 +96,9 @@ public class Entity {
     public void setWidth(final float width) {
         mWidth = width;
     }
-
     public float getHeight() {
         return mHeight;
     }
-
     public void setHeight(final float height) {
         mHeight = height;
     }

@@ -11,6 +11,7 @@ public class Enemy extends Entity {
     public static final String TAG = "Enemy";
     public static final float ENEMY_MAX_SPEED = 6;
     public static final int ENEMY_HEIGHT = 72; //pixels
+    protected float mPlayerSpeed = 0.0f;
     Bitmap mBitmap;
 
     public Enemy(Context context){
@@ -31,9 +32,12 @@ public class Enemy extends Entity {
                 Log.w(TAG, "Enemy resource ID out of range. Rolled: "+select);
                 break;
         }
-        mBitmap = Utils.scaleToTargetHeight(BitmapFactory.decodeResource(
-                            context.getResources(), resourceId), ENEMY_HEIGHT);
+        Bitmap temp = BitmapFactory.decodeResource(context.getResources(), resourceId);
+        mBitmap = Utils.scaleToTargetHeight(temp, ENEMY_HEIGHT);
         mBitmap = Utils.flipBitmap(mBitmap, false);
+        if(temp != mBitmap){
+            temp.recycle();
+        }
         respawn();
     }
 
@@ -43,6 +47,22 @@ public class Enemy extends Entity {
         mY = mDice.nextInt(Game.STAGE_HEIGHT- (int) mHeight);
         mX = Game.STAGE_WIDTH + mDice.nextInt((int)mWidth);
         mVelocityX = -1 + -mDice.nextInt((int) ENEMY_MAX_SPEED);
+    }
+
+    @Override
+    public void onCollision(Entity that){
+        respawn();
+    }
+
+    @Override
+    public void input(Game game){
+        mPlayerSpeed = game.getPlayerSpeed() * -1;
+    }
+
+    @Override
+    public void update(){
+        super.update();
+        mX += mPlayerSpeed;
     }
 
     @Override
